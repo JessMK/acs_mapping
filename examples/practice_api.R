@@ -1,4 +1,4 @@
-# Learn about Census API for data access
+# Try the Census API for Decennial and ACS data access
 
 # Load necessary libraries
 
@@ -25,7 +25,12 @@ pop_dec <- get_decennial(
     show_call = TRUE)
 
 
-# ACS Variables to plug in
+# ACS Variables to plug in, you can replace variables in the examples with these
+# Note: 
+# E = Estimate
+# M = Margin of Error (MOE)
+# More information on MOE can be found here:
+# https://www2.census.gov/about/training-workshops/2026/2026-03-11-using-acs-estimates-margins-of-error-presentation.pdf
 
 TOTAL_POP <- "B01003_001E"
 TOTAL_SEX_BY_AGE <- "B01001_001E"
@@ -40,7 +45,7 @@ BACH_DEGREE <- "B15003_022E"
 WORK_TRAVEL <- "B08301_010E"
 
 
-# ACS Population data
+# ACS 5-year Population data
 
 acs_total_pop = get_acs(
     # Data set default: American Community Survey 5-Year
@@ -57,7 +62,7 @@ acs_total_pop = get_acs(
 acs_total_pop
 
 
-# ACS Income data, one state
+# ACS 5-year Income data, one state
 
 acs_wa_income = get_acs(
     # Data set: American Community Survey 1-Year
@@ -76,14 +81,14 @@ acs_wa_income = get_acs(
 acs_wa_income
 
 
-# ACS Poverty data, all states
+# ACS 5-year Poverty data, all states
 
 acs_states_poverty = get_acs(
     # Data set default: American Community Survey 5-Year
     survey = "acs5",
     # Year: 2024
     year=2024,
-    # Variable: Name and poverty population
+    # Variable: Poverty Status
     variables= c("NAME", POVERTY_POP, "B17001_002M"),
     # Geography: State level
     geography = "state",
@@ -93,14 +98,14 @@ acs_states_poverty = get_acs(
 acs_states_poverty
 
 
-# ACS Two variables, tract level
+# ACS 5-year Two variables, tract level
 
 acs_east_coast_vars = get_acs(
     # Data set default: American Community Survey 5-Year
     survey = "acs5",
     # Year: 2021
     year = 2021,
-    # Variable: Bachelor Degree and Work Travel
+    # Variables: Bachelor Degree and Work Travel
     variables= c("NAME", BACH_DEGREE, WORK_TRAVEL),
     # Geography: tract level
     geography = "tract",
@@ -112,14 +117,14 @@ acs_east_coast_vars = get_acs(
 acs_east_coast_vars
 
 
-# ACS Earlier data, county level
+# ACS 5-year Earlier data, county level
 
 acs_west_coast_income = get_acs(
     # Data set default: American Community Survey 5-Year
     survey = "acs5",
     # Year: 2015
     year=2015,
-    # Name and median household income
+    # Variables: Median Household Income
     variables=c("NAME", MEDIAN_HOUSEHOLD_INCOME_VARIABLE, "B19013_001M"),
     # Geography: county level
     geography = "county",
@@ -131,14 +136,14 @@ acs_west_coast_income = get_acs(
 acs_west_coast_income
 
 
-# ACS DMV Population
+# ACS 5-year DMV Population
 
 acs_dmv_population = get_acs(
     # Data set default: American Community Survey 5-Year
     survey = "acs5",
     # Year: 2024
     year=2024,
-    # Variable: total sex by age
+    # Variables: Total Sex by Age
     variables=c("NAME", TOTAL_SEX_BY_AGE, TOTAL_SEX_BY_AGE_MALE, TOTAL_SEX_BY_AGE_FEMALE),
     # Geography: county level
     geography = "county",

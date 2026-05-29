@@ -1,16 +1,20 @@
-# Install our packages, if necessary
+# Mental Model for working with the Census API
 
-#install.packages(c("tidycensus",   # https://walker-data.com/tidycensus/; https://walker-data.com/census-r/
-#                   "censusapi",    # https://www.hrecht.com/censusapi/; https://github.com/hrecht/censusapi
-#                   "tigris",       # https://github.com/walkerke/tigris
-#                   "dplyr",        # https://dplyr.tidyverse.org/
-#                   "tidyr",        # https://tidyr.tidyverse.org/
-#                   "ggplot2",      # https://ggplot2.tidyverse.org/
-#                   "mapview",      # https://r-spatial.github.io/mapview/
-#                   "patchwork"))   # https://patchwork.data-imaginist.com/articles/patchwork.html
+# Every tidycensus call is a structured API query that returns a data frame.
 
-# geography functions/options: https://walker-data.com/census-r/an-introduction-to-tidycensus.html#geography-and-variables-in-tidycensus
+# Every Census API call is:
+##   a dataset + a geography + variables + filters = a table
 
+# Every Census map is: 
+##   a data call + shape file + join = visualization
+
+# We’ll repeat this pattern across multiple datasets.
+
+# For more geography functions/options: 
+# https://walker-data.com/census-r/an-introduction-to-tidycensus.html#geography-and-variables-in-tidycensus
+
+
+# Load our Libraries
 
 # For Census Data
 
@@ -20,8 +24,6 @@ library(censusapi) # everything else
 # For Census ShapeFiles
 
 library(tigris)
-
-options(tigris_use_cache = TRUE)   # to save your shapefiles for ease of recall
 
 # For working with the data and visualization
 
@@ -37,37 +39,11 @@ library(mapview)
 
 library(patchwork)
 
-
-# disable scientific notation
-
-options(scipen = 999)
-
-# Census API Key is required
-
-#census_api_key("INSERT YOUR KEY HERE", 
-#               install = TRUE, 
-#               overwrite = TRUE)
-#
-
 # Lets take a look at the available datasets
 
 apis <- listCensusApis()   # Get general information about available datasets
 
 View(apis)
-
-
-# Mental Model for working with the Census API
-
-# Every tidycensus call is a structured API query that returns a data frame.
-
-# Every Census API call is:
-##   a dataset + a geography + variables + filters = a table
-
-# Every Census map is: 
-##   a data call + shape file + join = visualization
-
-# We’ll repeat this pattern across multiple datasets.
-
 
 
 # Example 1: ACS Population (States)

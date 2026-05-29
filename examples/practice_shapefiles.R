@@ -6,7 +6,7 @@ pkgs_shapefiles <- c("tigris", "sf", "tidyverse", "patchwork")
 
 invisible(lapply(pkgs_shapefiles, library, character.only = TRUE))
 
-# This will save downloading resources with ShapeFile you use regularly
+# This will save downloading resources with shapefiles you use regularly
 
 #options(tigris_use_cache = TRUE)
 
@@ -28,6 +28,7 @@ ggplot(ca_counties) +
     geom_sf() + 
     ggtitle("Counties of California")
 
+
 me_counties <- counties(state = "ME", cb = TRUE)
 
 ggplot(me_counties) + 
@@ -45,6 +46,7 @@ pg_tracts <- tracts(state = "MD",
 ggplot(pg_tracts) + 
     geom_sf() + 
     ggtitle("Census Tracts in Prince Georges County")
+
 
 calvert_tracts <- tracts(state = "MD", 
                     county = "Calvert", 
@@ -65,6 +67,7 @@ wayne_bgs <- block_groups(state = "MI",
 ggplot(wayne_bgs) + 
     geom_sf() + 
     ggtitle("Block Groups in Wayne County")
+
 
 texas_bgs <- block_groups(state = "TX", 
                           county = "Bexar", 
@@ -155,8 +158,7 @@ synthetic_data <- geoids %>%
     mutate(
         synthetic_age = runif(n(), min = 0, max = 100),
         category = sample(c("A", "B", "C", "D"), size = n(), replace = TRUE),
-        population_size = sample(500:50000, size = n(), replace = TRUE)
-    )
+        population_size = sample(500:50000, size = n(), replace = TRUE))
 
 # Step 4. Join synthetic data to the shapefile
 
@@ -173,7 +175,8 @@ ggplot(geography_with_data) +
          fill = "Pop Size")
 
 
-# To Use with Any tigris Geography in Step 1
+# To use with any tigris geography in Step 1 
+# and rename the object to geography_sf
 
 # States
 geography_state <- states(cb = TRUE)

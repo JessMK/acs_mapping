@@ -1,71 +1,54 @@
 # Mapping Commute Patterns with ACS Data
-
-# Using geography to reveal commuting structure
+# Using data and geography to reveal commuting structure
 
 # We will demonstrate how ACS data can be transformed into
-# meaningful geographic stories using popular R packages.
-
-# PRESENTATION QUESTION:
-# "How does geography shape commute times in America?"
-
-# HYPOTHESIS:
-# Areas surrounding major metropolitan centers often
-# experience longer commute times than urban cores or
-# deeply rural areas.
+# meaningful geographic stories using popular R packages
 
 # WHY USE MAPS?
-# Traditional charts summarize data.
-# Maps reveal spatial patterns and relationships.
+# Traditional charts summarize data
+# Maps reveal spatial patterns and relationships
 
-# PACKAGES USED:
+# CORE PACKAGES USED:
 
 # tidycensus  -> ACS API access; https://walker-data.com/tidycensus/
 # tigris      -> Census shapefiles; https://github.com/walkerke/tigris
 # ggplot2     -> static thematic maps
 # leaflet     -> interactive web maps
 
-# Get a Census API key here: https://api.census.gov/data/key_signup.html
+# Start with the 00_setup.R file to install necessary packages and Census API key
 
-
-
-# 1. LOAD YOUR LIBRARIES
+# 1. Load your Libraries
 
 # Census data
 library(tidycensus)
-
 # Census shapefiles
 library(tigris)
-
 # data wrangling
 library(tidyverse)
-
 # spatial data support
 library(sf)
-
 # static mapping
 library(ggplot2)
-
 # interactive mapping
 library(leaflet)
-
 # formatting helpers
 library(scales)
 
+# disable scientific notation
+options(scipen = 999)
 
+# 2. Create a visualization output folder
 
-# 2. CREATE OUTPUT FOLDER
-
-# Create folder for exported visualizations
+# Create folder for exported visualizations, optional
 
 if (!dir.exists("mapping_visualizations")) {
     dir.create("mapping_visualizations")
 }
 
 
+# 3. TIGRIS settings
 
-# 3. TIGRIS SETTINGS
-
-# Cache shapefiles locally for faster repeated loading
+# Cache shapefiles locally for faster repeated loading, pay attention to space
 
 options(tigris_use_cache = TRUE)
 
@@ -73,25 +56,27 @@ options(tigris_use_cache = TRUE)
 options(tigris_class = "sf")
 
 
-
-# 4. ACS VARIABLES
+# 4. ACS Variables
 
 # ACS table: B08303 = Travel Time to Work
+# https://data.census.gov/table?q=B08303
 
 # We will focus on longer commute categories.
+# Universe: Workers 16 years and over who did not work from home
 
 acs_vars <- c(
     total_workers   = "B08303_001",
+    commute_30_34   = "B08303_008",
+    commute_35_39   = "B08303_009",
     commute_40_44   = "B08303_010",
     commute_45_59   = "B08303_011",
     commute_60_89   = "B08303_012",
     commute_90_plus = "B08303_013")
 
 
+# 5. Retrieve ACS data
 
-# 5. RETRIEVE ACS DATA
-
-# County-level ACS data for the U.S.
+# County-level ACS commute data for the U.S.
 
 commute_acs <- get_acs(
     geography = "county",
@@ -106,7 +91,9 @@ commute_acs <- get_acs(
         # Larger values indicate counties with more workers
         # experiencing long commute times.
         commute_index =
-            (commute_40_44E * 42 +
+            (commute_30_34E * 22 +
+             commute_35_39E * 32 +   
+             commute_40_44E * 42 +
              commute_45_59E * 52 +
              commute_60_89E * 75 +
              commute_90_plusE * 100) / total_workersE)
@@ -122,8 +109,7 @@ pop_data <- get_acs(
     select(GEOID, population = estimate)
 
 
-
-# 6. RETRIEVE SHAPEFILES
+# 6. Retrieve Shapefiles
 
 # U.S. counties, shifted geometry
 
@@ -228,16 +214,13 @@ major_cities <- city_points |>
     filter(density > 3000)
 
 
-
-# 7. JOIN ACS + GEOGRAPHY
-
+# 7. Join ACS data + Geography
 
 county_map <- counties_sf %>%
     left_join(commute_acs, by = "GEOID")
 
 
-
-# 8. CREATE A CENSUS COLOR PALETTE
+# 8. Create a Census Color Palette
 
 # Census-style blue palette
 
@@ -251,10 +234,9 @@ census_blues <- c(
     "#062644")  #very dark navy anchor
 
 
+# Now, lets start mapping!
 
-# Now, let's start mapping!
-
-# MAP 1: NATIONAL COUNTY CHOROPLETH
+# MAP 1: National County Choropleth
 
 # Lets use a map to reveal national commute patterns.
 
@@ -275,11 +257,13 @@ national_map <- ggplot(county_map) +
                          name = "Commute Index",
                          labels = scales::label_number(accuracy = 1)) +
     labs(title = "Commute Time Patterns Across U.S. Counties",
+         subtitle = "Red = State Capitals | Orange = Major Cities",
          caption = "Source: ACS5 2024 Commute Data") +
     coord_sf(expand = FALSE) +
     theme_void() +
     theme(plot.title = element_text(hjust = 0.5, face = "bold", margin = margin(b = 5)),
           plot.title.position = "panel",
+          plot.subtitle = element_text(hjust = 0.5, margin = margin(b = 4)),
           legend.position = "bottom",
           legend.direction = "horizontal",
           legend.title = element_text(size = 9, face = "bold"),
@@ -292,8 +276,7 @@ national_map <- ggplot(county_map) +
 # Display map
 national_map
 
-
-# Export map
+# Export map, optional
 ggsave(
     filename = "mapping_visualizations/national_commute_map.png",
     plot = national_map,
@@ -303,14 +286,9 @@ ggsave(
     bg = "white")
 
 
+# MAP 2: Washington DC Metro Area Commute
 
-# MAP 2: WASHINGTON DC METRO ZOOM
-
-
-# PURPOSE: Explore suburban commute patterns.
-
-# This helps investigate the hypothesis that
-# commute times increase outside urban cores.
+# Lets use a map to explore suburban commute patterns.
 
 dc_counties <- county_map %>%
     filter(STATEFP %in% c("11", # DC
@@ -347,10 +325,107 @@ dc_map <- ggplot(dc_counties) +
 dc_map
 
 
-# Export map
+# Export map, optional
 ggsave(
     filename = "mapping_visualizations/dc_commute_map.png",
     plot = dc_map,
+    width = 8,
+    height = 6,
+    dpi = 300,
+    bg = "white")
+
+
+# MAP 3: Weighted Average Commute Time by State
+
+# Lets use a map to see which states have the longest commute times?
+
+# Get state level commute table
+
+commute_time <- get_acs(geography = "state", 
+                        table = "B08303", 
+                        year = 2024, 
+                        survey = "acs5",
+                        output = "wide",
+                        show_call = TRUE)
+
+colnames(commute_time)
+
+
+# Define midpoints for each commute variable
+
+midpoints <- c(
+    "B08303_002E" = 2.5,
+    "B08303_003E" = 7,
+    "B08303_004E" = 12,
+    "B08303_005E" = 17,
+    "B08303_006E" = 22,
+    "B08303_007E" = 27,
+    "B08303_008E" = 32,
+    "B08303_009E" = 37,
+    "B08303_010E" = 42,
+    "B08303_011E" = 52.5,
+    "B08303_012E" = 75,
+    "B08303_013E" = 95)
+
+
+# Compute weighted mean commute time
+
+commute_weighted <- commute_time %>%
+    rowwise() %>%
+    mutate(
+        avg_commute = sum(c_across(names(midpoints)) * midpoints) /
+            B08303_001E) %>%
+    ungroup() %>%
+    select(GEOID, NAME, avg_commute)
+
+
+# Get state level shapefile and shift geometry
+
+states_sf <- states(cb = TRUE, 
+                    year = 2024) %>% 
+    shift_geometry()
+
+# Join our data and shapefile
+
+commute_map <- states_sf %>% 
+    left_join(commute_weighted, by = "GEOID")
+
+# Create the commute map
+# ACS estimates are already aggregated for us. 
+# We are mapping the estimated mean commute time directly from Census data.
+
+state_map <- ggplot(commute_map) +
+    geom_sf(aes(fill = avg_commute),
+            color = "white",
+            linewidth = 0.2) +
+    scale_fill_gradientn(colors = census_blues,
+                         name = "Total Minutes") +
+    labs(title = "Weighted Commute Time by State",
+        subtitle = "American Community Survey 5-Year Estimates (2024)",
+        caption = "Source: U.S. Census Bureau ACS") +
+    coord_sf(expand = FALSE) +
+    theme_void() +
+    theme(plot.title = element_text(hjust = 0.5, face = "bold", margin = margin(b = 5)),
+          plot.title.position = "panel",
+          plot.subtitle = element_text(hjust = 0.5, margin = margin(b = 4)),
+          legend.position = "bottom",
+          legend.direction = "horizontal",
+          legend.title = element_text(size = 9, face = "bold"),
+          legend.text = element_text(size = 8),
+          plot.margin = margin(t = 5, r = 5, b = 5, l = 5)) +
+    guides(fill = guide_colorbar(title.position = "top", 
+                                 barwidth = 14,
+                                 barheight = 0.6))
+
+
+# Display map
+state_map
+
+
+# Export map, optional
+ggsave(
+    filename = "mapping_visualizations/state_commute_map.png",
+    plot = state_map,
     width = 8,
     height = 6,
     dpi = 300,
