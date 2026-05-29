@@ -400,10 +400,9 @@ state_map <- ggplot(commute_map) +
             linewidth = 0.2) +
     scale_fill_gradientn(colors = census_blues,
                          name = "Total Minutes") +
-    labs(title = "Weighted Commute Time by State",
-        subtitle = "American Community Survey 5-Year Estimates (2024)",
-        caption = "Source: U.S. Census Bureau ACS") +
-    coord_sf(expand = FALSE) +
+    labs(title = "Weighted Average Commute Time by State",
+        caption = "Source: ACS5 2024 Commute Data") +
+    coord_sf(xlim = c(-2500000, 2500000), ylim = c(-2200000, 1900000), expand = FALSE) +
     theme_void() +
     theme(plot.title = element_text(hjust = 0.5, face = "bold", margin = margin(b = 5)),
           plot.title.position = "panel",

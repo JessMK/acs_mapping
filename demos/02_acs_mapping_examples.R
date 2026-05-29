@@ -14,7 +14,7 @@
 # https://walker-data.com/census-r/an-introduction-to-tidycensus.html#geography-and-variables-in-tidycensus
 
 
-# Load our Libraries
+# Load our Libraries, which were installed in the setup file
 
 # For Census Data
 
@@ -39,11 +39,20 @@ library(mapview)
 
 library(patchwork)
 
-# Lets take a look at the available datasets
+
+# First, lets take a look at the available datasets
 
 apis <- listCensusApis()   # Get general information about available datasets
 
-View(apis)
+View(apis) #1788 api options
+
+
+# Lets filter it down to ACS related only
+
+ACS_api <- apis %>%
+    filter(grepl("ACS", name, ignore.case = TRUE))  # 273 ACS related API options
+
+table(ACS_api$vintage) # We have data available since 2004
 
 
 # Example 1: ACS Population (States)
@@ -80,7 +89,8 @@ ggplot(map_pop_acs) +
     labs(title = "United State Population",
          caption = "Source: ACS 1-year, 2024")
 
-# note that this is the standard view, but this is not the Census standard view
+# note that this is the standard view, but this is not the Census standard view,
+# we will see a geography shift in Example 3
 
 
 
@@ -127,7 +137,7 @@ mapview((map_pop_acs_wide %>%
 pop_acs_geo <- get_acs(
     geography = "state",
     variables = "B01001_001",
-    geometry = TRUE,   # bring the geometry in during the data call, tidycensus possible
+    geometry = TRUE,   # bring the geometry in during the data call, tidycensus makes this possible
     year = 2024,      
     survey= "acs1",
     show_call = TRUE) %>% 
