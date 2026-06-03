@@ -39,6 +39,9 @@ library(mapview)
 
 library(patchwork)
 
+# disable scientific notation
+options(scipen = 999)
+
 
 # First, lets take a look at the available datasets
 
