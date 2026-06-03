@@ -58,6 +58,18 @@ ACS_api <- apis %>%
 table(ACS_api$vintage) # We have data available since 2004
 
 
+# Next, lets look at the available variables within a dataset
+
+ACS5_24_vars <- load_variables(2024, "acs5")
+
+View(ACS5_24_vars)
+
+
+ACS1_23_vars <- load_variables(2023, "acs1")
+
+View(ACS1_23_vars)
+
+
 # Example 1: ACS Population (States)
     
 ## Step 1: Data call to the Census API
