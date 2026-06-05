@@ -259,7 +259,8 @@ map_pov_acs5 <- counties_sf_24_shifted %>%
 
 ggplot(map_pov_acs5) +
     geom_sf(aes(fill = estimate)) +
-    scale_fill_viridis_c(direction = -1) +  # reversed from default
+    scale_fill_viridis_c(direction = -1,      # reversed from default
+                         option = "magma") +  
     labs(
         title = "County-Level Poverty Counts in the Mid-Atlantic Region",
         fill = "People",
@@ -313,7 +314,8 @@ map_edu_acs5 <- tracts_sf_24 %>%
 
 ggplot(map_edu_acs5) +
     geom_sf(aes(fill = estimate), color = NA) +
-    scale_fill_viridis_c(direction = -1) +
+    scale_fill_viridis_c(direction = -1,
+                         option = "plasma") +
     labs(
         title = "Bachelor's Degree Attainment Across California Census Tracts",
         fill = "Estimate",
@@ -354,7 +356,9 @@ income_state <- get_acs(
 
 ggplot(income_state) +
     geom_sf(aes(fill = estimate)) +
-    scale_fill_viridis_c(direction = -1, labels = scales::dollar) +
+    scale_fill_viridis_c(direction = -1, 
+                         option = "cividis",
+                         labels = scales::dollar) +
     labs(title = "United States Income by State", 
          subtitle = "Geometry pulled directly",
          caption = "Source: American Community Survey 1-year Estimate 2024")
@@ -382,6 +386,7 @@ poverty_pct$pct_poverty_num <- as.numeric(sub("%", "", poverty_pct$pct_poverty))
 ggplot(poverty_pct) +
     geom_sf(aes(fill = pct_poverty_num)) +
     scale_fill_viridis_c(direction = -1, 
+                         option = "magma",
                          labels = scales::label_percent(accuracy = 1)) +
     labs(title = "US County-Level Percent in Poverty",
          caption = "Source: American Community Survey 5-year Estimates 2024")
@@ -426,12 +431,14 @@ head(edu_ny_geo)  # view the wide output
 
 p1 = ggplot(edu_ny_geo) +
     geom_sf(aes(fill = bachelorsE)) +
-    scale_fill_viridis_c(direction = -1) +
+    scale_fill_viridis_c(direction = -1,
+                         option = "plasma") +
     labs(title = "Bachelor's Degrees")
 
 p2 = ggplot(edu_ny_geo) +
     geom_sf(aes(fill = mastersE)) +
-    scale_fill_viridis_c(direction = -1) +
+    scale_fill_viridis_c(direction = -1,
+                         option = "plasma") +
     labs(title = "Master's Degrees", 
          caption = "Source: American Community Survey 5-year Estimates 2023")
 
@@ -443,12 +450,16 @@ p2 = ggplot(edu_ny_geo) +
 
 p3 = ggplot(edu_ny_geo) +
     geom_sf(aes(fill = bachelorsE)) +
-    scale_fill_viridis_c(trans = "log10", direction = -1) +
+    scale_fill_viridis_c(trans = "log10", 
+                         direction = -1,
+                         option = "plasma") +
     labs(title = "Bachelor's Degrees (Log10)")
 
 p4 = ggplot(edu_ny_geo) +
     geom_sf(aes(fill = mastersE)) +
-    scale_fill_viridis_c(trans = "log10", direction = -1) +
+    scale_fill_viridis_c(trans = "log10", 
+                         direction = -1,
+                         option = "plasma") +
     labs(title = "Master's Degrees (Log10)", 
          caption = "Source: American Community Survey 5-year Estimates 2023")
 
