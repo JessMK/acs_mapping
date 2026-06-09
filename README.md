@@ -4,11 +4,15 @@ This repository contains demo materials, code examples, and resources from a pub
 
 You can request a [Census API key here](https://api.census.gov/data/key_signup.html). This is required for all data calls, learn more through the Census [resource library.](https://www.census.gov/library/video/2026/adrm/requesting-a-census-data-api-key.html)
 
+---
+
 ## Opening this Project
 
 - Download or clone this repository
 - Open acs-mapping.Rproj
 - Open the files from within the RStudio project, starting with setup
+
+---
 
 ## Repository Structure
 
@@ -17,6 +21,8 @@ You can request a [Census API key here](https://api.census.gov/data/key_signup.h
 | setup/ | Start here to install your packages and set your API key |
 | demos/ | Live presentation and demo scripts for the webinar |
 | examples/ | Reusable example scripts to explore ACS data and Census geographies on your own |
+
+---
 
 ## Topics Covered
 
@@ -27,6 +33,8 @@ You can request a [Census API key here](https://api.census.gov/data/key_signup.h
 - Styling maps with `ggplot2`
 - Exploring demographic and socioeconomic patterns
 
+---
+
 ## The included examples focus on practical, reproducible workflows using:
 
 - The [tidycensus package](https://walker-data.com/tidycensus/) and [book Methods, Maps, and Models in R](https://walker-data.com/census-r/) for Census [data](https://data.census.gov/).
@@ -36,9 +44,13 @@ You can request a [Census API key here](https://api.census.gov/data/key_signup.h
 - Visualization packages such as ggplot2, [leaflet](https://rstudio.github.io/leaflet/), [mapview.](https://r-spatial.github.io/mapview/)
 - Other formatting packages such as [scales](https://scales.r-lib.org/), [patchwork](https://patchwork.data-imaginist.com/articles/patchwork.html), and [sf.](https://r-spatial.github.io/sf/)
 
+---
+
 ## Now, try it yourself with the scripts in the examples folder
 
 ![Weighted Average Commute Time by State](mapping_visualizations/state_commute_map.png)
+
+---
 
 ## Completely new to using R? Start here
 
@@ -126,8 +138,10 @@ https://desktop.github.com/
 2. Navigate to the folder where the repository was saved
 3. Open the `.Rproj` file (if available)
 4. Open `00_setup.R`
-5. Add your API Key on line 54 and uncomment the code (remove the #)
-6. Run the script to install required packages
+5. Uncomment lines 12 through 20 (remove the #) to install packages
+6. Uncomment line 54 (remove the #) and add your API Key in place of the text 
+7. Run the full script to install required packages and save your API key
+8. After successfully getting output from line 75, put recomment (add a #) lines 12 through 20 & 54. You only need to do this step once.
 
 ---
 
@@ -153,6 +167,7 @@ This script will:
 
 - Install required R packages
 - Load necessary libraries
+- Install your unique API key to your R environment
 - Verify your environment is working correctly
 
 Once it completes successfully, proceed to `01_commute.Rmd`.
@@ -181,13 +196,13 @@ Goal: Learn the workflow used throughout the project.
 
 Open `02_acs_examples.Rmd`
 
-Goal: Learn how to access and analyze ACS data using R and APIs.
+Goal: Learn how to access and visualize ACS data using R and APIs.
 
 ---
 
 ## Step 4: Practice on Your Own
 
-Once you’ve completed the guided examples, try applying what you’ve learned using the practice files in the `examples` folder.
+Once you have completed the guided examples, try applying what you learned using the practice files in the `examples` folder.
 
 Open and work through:
 

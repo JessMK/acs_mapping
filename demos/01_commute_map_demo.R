@@ -1,23 +1,23 @@
-# Mapping Commute Patterns with ACS Data
+# Mapping Commute Patterns with American Community Survey (ACS) 5-year Estimates Data
 # Using data and geography to reveal commuting structure
 
 # We will demonstrate how ACS data can be transformed into
 # meaningful geographic stories using popular R packages
 
-# WHY USE MAPS?
+# Why use maps?
 # Traditional charts summarize data
 # Maps reveal spatial patterns and relationships
 
-# CORE PACKAGES USED:
+# Core packages used:
 
 # tidycensus  -> ACS API access; https://walker-data.com/tidycensus/
 # tigris      -> Census shapefiles; https://github.com/walkerke/tigris
 # ggplot2     -> static thematic maps
 # leaflet     -> interactive web maps
 
-# Start with the 00_setup.R file to install necessary packages and Census API key
+# Start with the 00_setup.R file to install necessary packages and your Census API key
 
-# 1. Load your Libraries
+# 1. Load your necessary packages
 
 # Census data
 library(tidycensus)
@@ -37,9 +37,8 @@ library(scales)
 # disable scientific notation
 options(scipen = 999)
 
-# 2. Create a visualization output folder
 
-# Create folder for exported visualizations, this is optional
+# 2. Create a visualization output folder for exported visualizations, this is optional
 
 if (!dir.exists("mapping_visualizations")) {
     dir.create("mapping_visualizations")
@@ -56,7 +55,7 @@ options(tigris_use_cache = TRUE)
 options(tigris_class = "sf")
 
 
-# 4. ACS Variables
+# 4. List our ACS Variables 
 
 # ACS table: B08303 = Travel Time to Work
 # https://data.census.gov/table?q=B08303
@@ -74,7 +73,7 @@ acs_vars <- c(
     commute_90_plus = "B08303_013")
 
 
-# 5. Retrieve ACS data
+# 5. Retrieve ACS data from the API
 
 # County-level ACS commute data for the U.S.
 
@@ -109,7 +108,7 @@ pop_data <- get_acs(
     select(GEOID, population = estimate)
 
 
-# 6. Retrieve Shapefiles
+# 6. Retrieve Shapefiles from Census TIGER/Line Shapefiles site
 
 # U.S. counties, shifted geometry
 
@@ -238,8 +237,8 @@ census_blues <- c(
 
 # Map 1: Mapping Long Commute Patterns Across U.S. Counties
 
-# Goal: Retrieve ACS commute data, join county boundaries and reference layers, 
-# and create a thematic map showing counties with higher concentrations of long 
+# Goal: Using the ACS commute data, joined to county boundaries and city reference layers, 
+# create a thematic map showing counties with higher concentrations of long 
 # commutes.
 
 national_map <- ggplot(county_map) +
@@ -256,7 +255,7 @@ national_map <- ggplot(county_map) +
             size = 1,
             alpha = 0.7) +
     scale_fill_gradientn(colors = census_blues,
-                         name = "Commute Index",
+                         name = "Commute Index Calculation",
                          labels = scales::label_number(accuracy = 1)) +
     labs(title = "Workers with Commutes of 30 Minutes or Longer Across U.S. Counties",
          subtitle = "Red = State Capitals | Orange = Major Cities",
@@ -290,7 +289,7 @@ ggsave(
 
 # Map 2: Exploring Commute Patterns in the Washington, DC Area
 
-# Goal: Filter geographic data to a study area and analyze 
+# Goal: Filter geographic data to a smaller area and view 
 # regional commuting patterns using county-level ACS estimates.
 
 dc_counties <- county_map %>%
@@ -309,7 +308,7 @@ dc_map <- ggplot(dc_counties) +
                          name = "Commute Index",
                          labels = scales::label_number(accuracy = 1)) +
     coord_sf(expand = FALSE) +
-    labs(title = "County-level Commute Patterns Across the Washington Metropolitan Area",
+    labs(title = "County-level Commute Patterns Across the Washington DC Metropolitan Area",
          caption = "Source: American Community Survey 5-year Estimates 2024") +
     theme_void() +
     theme(plot.title = element_text(hjust = 0.5, face = "bold", margin = margin(b = 5)),
@@ -394,9 +393,7 @@ states_sf <- states(cb = TRUE,
 commute_map <- states_sf %>% 
     left_join(commute_weighted, by = "GEOID")
 
-# Create the commute map
-# ACS estimates are already aggregated for us. 
-# We are mapping the estimated mean commute time directly from Census data.
+# Create the state level commute map using the estimated mean commute time calculation 
 
 state_map <- ggplot(commute_map) +
     geom_sf(aes(fill = avg_commute),

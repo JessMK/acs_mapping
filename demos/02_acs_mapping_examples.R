@@ -6,22 +6,22 @@
 ##   a dataset + a geography + variables + filters = a table
 
 # Every Census map is: 
-##   a data call + shape file + join = visualization
+##   a data call + shapefile + join = geographic visualization
 
-# We’ll repeat this pattern across multiple datasets.
+# We will repeat this pattern across multiple datasets.
 
 # For more geography functions/options: 
 # https://walker-data.com/census-r/an-introduction-to-tidycensus.html#geography-and-variables-in-tidycensus
 
 
-# Load our Libraries, which were installed in the setup file
+# Load our packages, which were installed in the setup file
 
 # For Census Data
 
 library(tidycensus) # ACS, Decennial 
-library(censusapi) # everything else  
+library(censusapi) # All other Census datasets
 
-# For Census ShapeFiles
+# For Census shapefiles
 
 library(tigris)
 
@@ -98,12 +98,12 @@ pop_acs <- get_acs(
     show_call = TRUE)                   # show the URL 
 
 
-## Step 2: Get your ShapeFile from tigris
+## Step 2: Get your shapefile from tigris
 
 states_sf <- states(year = 2024)
 
 
-## Step 3: Join the data and ShapeFile
+## Step 3: Join the data and shapefile
 
 map_pop_acs <- left_join(states_sf, 
                          pop_acs, 
@@ -114,7 +114,8 @@ map_pop_acs <- left_join(states_sf,
 
 ggplot(map_pop_acs) +
     geom_sf(aes(fill = estimate)) +
-    scale_fill_viridis_c(direction = -1) +
+    scale_fill_viridis_c(direction = -1,
+                         labels = label_comma(accuracy = 1)) +
     labs(title = "Total Population Distribution Across the United States",
          caption = "Source: American Community Survey 1-year Estimate 2024")
 
@@ -151,6 +152,9 @@ mapview((map_pop_acs_wide %>%
                       "B01001_001E",
                       "B01001_002E",
                       "B01001_026E")) %>%
+             mutate(B01001_001E = number(B01001_001E, big.mark = ",", accuracy = 1),
+                    B01001_002E = number(B01001_002E, big.mark = ",", accuracy = 1),
+                    B01001_026E = number(B01001_026E, big.mark = ",", accuracy = 1)) %>%
              dplyr::rename(State = NAME.y,
                     Region = REGION,
                     Total = B01001_001E,
@@ -176,14 +180,15 @@ pop_acs_geo <- get_acs(
     year = 2024,      
     survey= "acs1",
     show_call = TRUE) %>% 
-    shift_geometry()  # shift_geometry gives us the census standard view, pay attention to the difference
-
+    shift_geometry() %>%  # shift_geometry gives us the census standard view, pay attention to the difference
+    rename(Estimate = estimate)
 
 ## Step 2: Visualization, we don't need to get the shapefile since we have geometry in our data call
 
 ggplot(pop_acs_geo) +
     geom_sf(aes(fill = estimate)) +
-    scale_fill_viridis_c(direction = -1) +
+    scale_fill_viridis_c(direction = -1,
+                         labels = label_comma(accuracy = 1)) +
     labs(title = "State Population Estimates Using Shifted Geometries",
          caption = "Source: American Community Survey 1-year Estimate 2024")
 
@@ -200,15 +205,15 @@ pop_dec <- get_decennial(
     show_call = TRUE)
 
 
-## Step 2: ShapeFile from tigris
+## Step 2: shapefile from tigris
 
 counties_sf_20 <- counties(year = 2020)
 
-# Shift Alaska, Hawaii, and Puerto Rico, another way to shift the geometry
+# Shift Alaska, Hawaii, and Puerto Rico, this is another way to shift the geometry
 counties_sf_shifted <- shift_geometry(counties_sf_20)
 
 
-## Step 3: Join the data and ShapeFile
+## Step 3: Join the data and shapefile
 
 map_pop_dec <- left_join(counties_sf_shifted, 
                          pop_dec, 
@@ -220,7 +225,8 @@ map_pop_dec <- left_join(counties_sf_shifted,
 
 ggplot(map_pop_dec) +
     geom_sf(aes(fill = value)) +
-    scale_fill_viridis_c(direction = -1) +
+    scale_fill_viridis_c(direction = -1,
+                         labels = label_comma(accuracy = 1)) +
     labs(title = "County Population Counts from the 2020 Decennial Census",
          caption = "Source: Decennial Census 2020")
 
@@ -240,7 +246,7 @@ poverty_county <- get_acs(
 
 state_counties <- poverty_county$GEOID
 
-## Step 2: ShapeFile from tigris
+## Step 2: Shapefile from tigris
 
 counties_sf_24 <- counties(year = 2023, 
                            cb = TRUE) # cb = generalized shapefile, more details/more resources
@@ -248,7 +254,7 @@ counties_sf_24 <- counties(year = 2023,
 counties_sf_24_shifted <- shift_geometry(counties_sf_24)
 
 
-## Step 3: Join the data and ShapeFile
+## Step 3: Join the data and shapefile
 
 map_pov_acs5 <- counties_sf_24_shifted %>%
     filter(GEOID %in% state_counties) %>%        # filter the geoid so it only maps what we have data for
@@ -260,7 +266,8 @@ map_pov_acs5 <- counties_sf_24_shifted %>%
 ggplot(map_pov_acs5) +
     geom_sf(aes(fill = estimate)) +
     scale_fill_viridis_c(direction = -1,      # reversed from default
-                         option = "magma") +  
+                         option = "magma",
+                         labels = label_comma(accuracy = 1)) +  
     labs(
         title = "County-Level Poverty Counts in the Mid-Atlantic Region",
         fill = "People",
@@ -297,14 +304,14 @@ edu_tract <- get_acs(
     show_call = TRUE)
 
 
-## Step 2: ShapeFile from tigris
+## Step 2: Shapefile from tigris
 
 tracts_sf_24 <- tracts(state = "CA", 
                        year = 2022, 
                        cb = TRUE)
 
 
-## Step 3: Join the data and ShapeFile
+## Step 3: Join the data and shapeFile
 
 map_edu_acs5 <- tracts_sf_24 %>%
     left_join(edu_tract, by = "GEOID")
@@ -315,7 +322,8 @@ map_edu_acs5 <- tracts_sf_24 %>%
 ggplot(map_edu_acs5) +
     geom_sf(aes(fill = estimate), color = NA) +
     scale_fill_viridis_c(direction = -1,
-                         option = "plasma") +
+                         option = "plasma",
+                         labels = label_comma(accuracy = 1)) +
     labs(
         title = "Bachelor's Degree Attainment Across California Census Tracts",
         fill = "Estimate",
@@ -329,8 +337,8 @@ mapview(map_edu_acs5 %>%
                      "STATE_NAME",
                      "estimate",
                      "moe")) %>%
-            rename('County and State' = NAME.y,
-                   County = NAMELSAD,
+            rename('Tract and State' = NAME.y,
+                   Tract = NAMELSAD,
                    State = STATE_NAME,
                    'Bachelors Degree Attainment Estimate' = estimate,
                    'Bachelors Degree Attainment Margin of Error' = moe), 
@@ -350,17 +358,17 @@ income_state <- get_acs(
     survey = "acs1",
     geometry = TRUE,             # no need to get the shapefile, we have the geometry
     show_call = TRUE) %>%
-    shift_geometry()
+    shift_geometry() %>%
+    rename(Estimate = estimate)
 
 ## Step 2: Visualization, create a map
 
 ggplot(income_state) +
-    geom_sf(aes(fill = estimate)) +
+    geom_sf(aes(fill = Estimate)) +
     scale_fill_viridis_c(direction = -1, 
                          option = "cividis",
                          labels = scales::dollar) +
     labs(title = "United States Income by State", 
-         subtitle = "Geometry pulled directly",
          caption = "Source: American Community Survey 1-year Estimate 2024")
 
 
@@ -422,7 +430,9 @@ edu_ny_geo <- get_acs(
     year = 2023,
     survey = "acs5",
     geometry = TRUE,
-    show_call = TRUE)
+    show_call = TRUE) %>%
+    rename(Bachelors = bachelorsE,
+           Masters = mastersE)
 
 head(edu_ny_geo)  # view the wide output
 
@@ -430,15 +440,17 @@ head(edu_ny_geo)  # view the wide output
 ## Step 2: Visualization, create a side by side map
 
 p1 = ggplot(edu_ny_geo) +
-    geom_sf(aes(fill = bachelorsE)) +
+    geom_sf(aes(fill = Bachelors)) +
     scale_fill_viridis_c(direction = -1,
-                         option = "plasma") +
+                         option = "plasma",
+                         labels = label_comma(accuracy = 1)) +
     labs(title = "Bachelor's Degrees")
 
 p2 = ggplot(edu_ny_geo) +
-    geom_sf(aes(fill = mastersE)) +
+    geom_sf(aes(fill = Masters)) +
     scale_fill_viridis_c(direction = -1,
-                         option = "plasma") +
+                         option = "plasma",
+                         labels = label_comma(accuracy = 1)) +
     labs(title = "Master's Degrees", 
          caption = "Source: American Community Survey 5-year Estimates 2023")
 
@@ -449,17 +461,19 @@ p2 = ggplot(edu_ny_geo) +
 # Visualization with a log transformation, to bring the colors out
 
 p3 = ggplot(edu_ny_geo) +
-    geom_sf(aes(fill = bachelorsE)) +
+    geom_sf(aes(fill = Bachelors)) +
     scale_fill_viridis_c(trans = "log10", 
                          direction = -1,
-                         option = "plasma") +
+                         option = "plasma",
+                         labels = label_comma(accuracy = 1)) +
     labs(title = "Bachelor's Degrees (Log10)")
 
 p4 = ggplot(edu_ny_geo) +
-    geom_sf(aes(fill = mastersE)) +
+    geom_sf(aes(fill = Masters)) +
     scale_fill_viridis_c(trans = "log10", 
                          direction = -1,
-                         option = "plasma") +
+                         option = "plasma",
+                         labels = label_comma(accuracy = 1)) +
     labs(title = "Master's Degrees (Log10)", 
          caption = "Source: American Community Survey 5-year Estimates 2023")
 
@@ -479,10 +493,11 @@ dc_income <- get_acs(
     survey = "acs5",
     year = 2024,
     geometry = TRUE,
-    show_call = TRUE)
+    show_call = TRUE) %>%
+    rename(Estimate = estimate)
 
 
-## Step 2: ShapeFile from tigris
+## Step 2: Shapefile from tigris
 
 dc_landmarks <- landmarks(state = "DC")
 
@@ -490,7 +505,8 @@ dc_landmarks <- landmarks(state = "DC")
 ## Step 3: Visualization, create a map with two layers
 
 ggplot() +
-    geom_sf(data = dc_income, aes(fill = estimate), alpha = 0.7) +
+    geom_sf(data = dc_income, aes(fill = Estimate, alpha = 0.7)) +
+    scale_fill_continuous(labels = label_comma()) +
     geom_sf(data = dc_landmarks, color = "red", size = 1) +
     labs(title = "Median Household Income and Major Landmarks in Washington, DC",
          caption = "Source: American Community Survey 5-year Estimates 2024")

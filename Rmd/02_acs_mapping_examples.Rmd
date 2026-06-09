@@ -1,6 +1,6 @@
 ---
-title: "ACS Data & Mapping Examples"
-author: "Jessica Klein, Census Bureau"
+title: "American Community Survey 1 & 5-year Estimates, Data & Mapping Examples"
+author: "Jessica Klein, U.S. Census Bureau"
 date: "`r Sys.Date()`"
 output: html_document
 ---
@@ -17,9 +17,9 @@ Mental Model for working with the Census API
 Every tidycensus call is a structured API query that returns a data frame.
 
 - Every Census API call is a dataset + a geography + variables + filters = a table
-- Every Census map is a data call + shape file + join = visualization
+- Every Census map is a data call + shapefile + join = geographic visualization
 
-We’ll repeat this pattern across multiple datasets.
+We will repeat this pattern across multiple datasets.
 
 For more geography functions/options, see the [tidycensus documentation](https://walker-data.com/census-r/an-introduction-to-tidycensus.html#geography-and-variables-in-tidycensus).
 
@@ -29,9 +29,9 @@ To set up your working session, load the below packages, which were all installe
 # For Census Data
 
 library(tidycensus) # ACS, Decennial 
-library(censusapi) # everything else  
+library(censusapi) # All other Census datasets
 
-# For Census ShapeFiles
+# For Census shapefiles
 
 library(tigris)
 
@@ -62,15 +62,24 @@ First, lets take a look at the available datasets.
 ```{r apis}
 apis <- listCensusApis()   # Get general information about available datasets
 
-head(apis[ , -c(8,9,10)], 30) #1788 api options
+head(apis[ , -c(8,9,10)], 30) #There are 1788 api options
+```
 
-
+```{r api-filtered}
 # Lets filter it down to ACS related only
 
 ACS_api <- apis %>%
     filter(grepl("ACS", name, ignore.case = TRUE))  # 273 ACS related API options
 
-table(ACS_api$vintage) # We have data available since 2004
+cat("We now have 29 unique API end points to connect to, across several vintages:\n\n")
+
+table(ACS_api$name)
+
+cat("\n\n")
+
+cat("We have data available since 2004:\n\n")
+
+table(ACS_api$vintage) 
 ```
 
 Next, lets look at the available variables within a dataset.
@@ -89,7 +98,7 @@ ACS5_22_vars <- load_variables(2022, "acs5")
 
 ### Example 1: Mapping State Population Estimates from the ACS
 
-- Goals: Retrieve ACS 1-year 2024 population estimates, join them to state boundaries, and create a choropleth map using ggplot2.
+**Goal**: Retrieve ACS 1-year 2024 population estimates, join them to state boundaries, and create a choropleth map using ggplot2.
 
 - See additional geography options [here](http://api.census.gov/data/2024/acs/acs1/geography.json)
 - See additional variable options [here](http://api.census.gov/data/2024/acs/acs1/variables.json)
@@ -106,42 +115,58 @@ pop_acs <- get_acs(
     survey= "acs1",
     show_call = TRUE)                 # show the URL 
 
+head(pop_acs, 10)
+```
 
-## Step 2: Get your ShapeFile from tigris
+We now have our state-level ACS population estimates, including total, male, and female population counts.
+
+```{r state-shape}
+## Step 2: Get your shapefile from tigris
 
 states_sf <- states(year = 2024)
 
+head(states_sf, 10)
+```
+We now have the state boundary geometries needed to visualize our population estimates on a map, in the geometry column.
 
-## Step 3: Join the data and ShapeFile
+```{r state-join}
+## Step 3: Join the data and shapefile
 
 map_pop_acs <- left_join(states_sf, 
                          pop_acs, 
                          by = "GEOID")
 
+head(map_pop_acs, 10)
+```
+Our ACS population data and state boundaries have now been combined into a single spatial dataset ready for mapping.
 
+```{r}
 ## Step 4: Visualization, create a map
 
 ggplot(map_pop_acs) +
     geom_sf(aes(fill = estimate)) +
-    scale_fill_viridis_c(direction = -1) +
+    scale_fill_viridis_c(direction = -1,
+                         labels = label_comma(accuracy = 1)) +
     labs(title = "Total Population Distribution Across the United States",
          caption = "Source: American Community Survey 1-year Estimate 2024")
 
 # note that this is the standard view, but this is not the Census standard view, we will see a geography shift in Example 3
 ```
 
-- Workflow: ACS Data → State Shapefile → Join → Map
+**Workflow**: ACS Data → State Shapefile → Join → Map
+
+This example demonstrates the core workflow used throughout spatial analysis: obtaining statistical data, acquiring geographic boundaries, joining the datasets, and visualizing the results.
 
 Why Does Alaska Look So Far Away?
 
-This map uses the original state geometries provided by the Census Bureau. Notice that Alaska and Hawaii appear in their true geographic locations.
+This map uses the original state geometries provided by the Census Bureau. Notice that Alaska and Hawaii, along with the Island Areas, appear in their true geographic locations.
 
-Many cartographic products shift Alaska and Hawaii closer to the continental United States. The purpose of this shift is not to change the data, but to improve map readability and make better use of available space. We begin with displaying the original geometries so you can see the source data before introducing cartographic adjustments in later examples.
+Many cartographic products shift Alaska and Hawaii closer to the continental United States. The purpose of this shift is not to change the data, but to improve map readability and make better use of available space. We begin with displaying the original geometries so you can see the source data before introducing cartographic adjustments in the remaining examples.
 
 
 ### Example 2: Creating Interactive Population Maps with mapview
 
-- Goal: Create an interactive map that allows the option to zoom, pan, and inspect population estimates for individual states.
+**Goal**: Create an interactive map that allows the option to zoom, pan, and inspect population estimates for individual states.
 
 ```{r acs-pop}
 ## Step 1: Data call to the Census API
@@ -154,7 +179,14 @@ pop_acs_wide <- get_acs(
     year = 2024, 
     survey= "acs1",
     output = "wide",
-    show_call = TRUE)  
+    show_call = TRUE)
+
+head(pop_acs_wide, 10)
+```
+
+We now have our ACS population estimates in a wide format, making it easier to display multiple variables within an interactive map popup.
+
+```{r acs-shape}
 
 ## Step 2: Join your shapefile and your data
 
@@ -170,6 +202,9 @@ mapview((map_pop_acs_wide %>%
                       "B01001_001E",
                       "B01001_002E",
                       "B01001_026E")) %>%
+             mutate(B01001_001E = number(B01001_001E, big.mark = ",", accuracy = 1),
+                    B01001_002E = number(B01001_002E, big.mark = ",", accuracy = 1),
+                    B01001_026E = number(B01001_026E, big.mark = ",", accuracy = 1)) %>%
              dplyr::rename(State = NAME.y,
                     Region = REGION,
                     Total = B01001_001E,
@@ -184,12 +219,14 @@ mapview((map_pop_acs_wide %>%
         layer.name = "Region")
 ```
 
-- Workflow: ACS Data → Wide Format → State Shapefile → Join → Interactive Map
+**Workflow**: ACS Data → Wide Format → State Shapefile → Join → Interactive Map
+
+Users can click on any state to view total, male, and female population estimates directly from the map. Interactive maps are useful for exploratory analysis because they combine geographic patterns with detailed attribute information.
 
 
 ### Example 3: ACS Population (States) with shifted geometry
 
-- Goal: Retrieve ACS data with geometry included, apply a geometry shift, and create a state-level population map.
+**Goal**: Retrieve ACS data with geometry included, apply a geometry shift, and create a state-level population map.
 
 ```{r state-acs-pop}
 ## Step 1: Data call to the Census API with geometry included, and shift it to a Census standard
@@ -201,30 +238,32 @@ pop_acs_geo <- get_acs(
     year = 2024,      
     survey= "acs1",
     show_call = TRUE) %>% 
-    shift_geometry()  # shift_geometry gives us the census standard view
+    shift_geometry() %>%  # shift_geometry gives us the census standard view
+    rename(Estimate = estimate)
 
 
 ## Step 2: Visualization, we don't need to get the shapefile since we have geometry
 
 ggplot(pop_acs_geo) +
-    geom_sf(aes(fill = estimate)) +
-    scale_fill_viridis_c(direction = -1) +
+    geom_sf(aes(fill = Estimate)) +
+    scale_fill_viridis_c(direction = -1,
+                         labels = label_comma(accuracy = 1)) +
     labs(title = "State Population Estimates Using Shifted Geometries",
          caption = "Source: American Community Survey 1-year Estimate 2024")
 ```
 
-- Workflow: ACS Data with Geometry → Shift Geometry → Map
+**Workflow**: ACS Data with Geometry → Shift Geometry → Map
+
+We now have both the ACS population estimates and the state geometries in a single dataset. Unlike previous examples, no separate shapefile download or join is required. Shifting Alaska and Hawaii creates a more compact map while preserving the underlying population estimates.
 
 Why Shift State Geometries?
 
-Alaska and Hawaii are geographically far from the continental United States. While their true locations are accurate, they leave large areas of empty space and can make national maps more difficult to read.
-
-A geometry shift positions Alaska and Hawaii closer to the lower 48 states for display purposes. The underlying data do not change—only the visual placement of the features on the map.
+Alaska and Hawaii are geographically far from the continental United States. While their true locations are accurate, they leave large areas of empty space and can make national maps more difficult to read. A geometry shift positions Alaska, Hawaii and Puerto Rico closer to the lower 48 states for display purposes. The underlying data do not change—only the visual placement of the features on the map.
 
 
 ### Example 4: Mapping 2020 Decennial Census Population by County
 
-- Goal: Retrieve Decennial Census population data, obtain county boundaries from tigris, apply a geometry shift, and create a county-level population map.
+**Goal**: Retrieve Decennial Census population data, obtain county boundaries from tigris, apply a geometry shift, and create a county-level population map.
 
 ```{r decennial}
 ## Step 1: Data call to the Census API
@@ -233,18 +272,19 @@ pop_dec <- get_decennial(
     geography = "county",
     variables = "P1_001N",
     year = 2020,
-    show_call = TRUE)
+    show_call = TRUE) %>%
+    rename(Count = value)
 
 
-## Step 2: ShapeFile from tigris
+## Step 2: Shapefile from tigris
 
 counties_sf_20 <- counties(year = 2020)
 
-# Shift Alaska, Hawaii, and Puerto Rico, another way to shift the geometry
+# Shift Alaska, Hawaii, and Puerto Rico, this is another way to shift the geometry
 counties_sf_shifted <- shift_geometry(counties_sf_20)
 
 
-## Step 3: Join the data and ShapeFile
+## Step 3: Join the data and shapefile
 
 map_pop_dec <- left_join(counties_sf_shifted, 
                          pop_dec, 
@@ -255,18 +295,21 @@ map_pop_dec <- left_join(counties_sf_shifted,
 ## Step 4: Visualization, create a map
 
 ggplot(map_pop_dec) +
-    geom_sf(aes(fill = value)) +
-    scale_fill_viridis_c(direction = -1) +
+    geom_sf(aes(fill = Count)) +
+    scale_fill_viridis_c(direction = -1,
+                         labels = label_comma(accuracy = 1)) +
     labs(title = "County Population Counts from the 2020 Decennial Census",
          caption = "Source: Decennial Census 2020")
 ```
 
-- Workflow: Decennial Census Data → County Shapefile → Shift Geometry → Remove Territories → Join → Map
+**Workflow**: Decennial Census Data → County Shapefile → Shift Geometry → Remove Territories → Join → Map
+
+Notice that the workflow is nearly identical to the ACS examples. Once the data have been retrieved and joined to geography, the mapping process remains largely the same regardless of the Census data product being used.
 
 
 ### Example 5: Mapping County-Level Poverty Rates in the Mid-Atlantic Region
 
-- Goal: Retrieve ACS 5-year poverty estimates, filter to a multi-state region, apply a geometry shift, and visualize results using both static (ggplot2) and interactive (mapview) maps.
+**Goal**: Retrieve ACS 5-year poverty estimates, filter to a smaller area, apply a geometry shift, and visualize results using both static (ggplot2) and interactive (mapview) maps.
 
 ```{r poverty-county}
 ## Step 1: Data call to the Census API
@@ -281,7 +324,7 @@ poverty_county <- get_acs(
 
 state_counties <- poverty_county$GEOID
 
-## Step 2: ShapeFile from tigris
+## Step 2: Shapefile from tigris
 
 counties_sf_24 <- counties(year = 2023, 
                            cb = TRUE) # cb = generalized shapefile, more details/more resources
@@ -289,7 +332,7 @@ counties_sf_24 <- counties(year = 2023,
 counties_sf_24_shifted <- shift_geometry(counties_sf_24)
 
 
-## Step 3: Join the data and ShapeFile
+## Step 3: Join the data and shapefile
 
 map_pov_acs5 <- counties_sf_24_shifted %>%
     filter(GEOID %in% state_counties) %>%
@@ -301,12 +344,15 @@ map_pov_acs5 <- counties_sf_24_shifted %>%
 ggplot(map_pov_acs5) +
     geom_sf(aes(fill = estimate)) +
     scale_fill_viridis_c(direction = -1,
-                         option = "magma") +
+                         option = "magma",
+                         labels = label_comma(accuracy = 1)) +
     labs(
         title = "County-Level Poverty Counts in the Mid-Atlantic Region",
         fill = "People",
         caption = "Source: American Community Survey 5-year Estimates 2023")
+```
 
+```{r poverty-county-mapview}
 # Try mapview for an interactive view
 
 mapview((map_pov_acs5 %>% 
@@ -323,13 +369,17 @@ mapview((map_pov_acs5 %>%
         zcol = "Poverty Count Estimate", 
         layer.name = "Poverty Count Estimate")
 ```
+**Workflow**: ACS 5-Year Data → County Shapefile → Filter Region → Shift Geometry → Join → Static Map (ggplot2) → Interactive Map (mapview)
 
-- Workflow: ACS 5-Year Data → County Shapefile → Filter Region → Shift Geometry → Join → Static Map (ggplot2) → Interactive Map (mapview)
+This example demonstrates how ACS 5-year estimates can be used for sub-state analysis and how combining static and interactive visualization tools can support different types of exploratory analysis. Notice that the same dataset can be visualized in multiple ways, even though the underlying data are identical:
+
+- ggplot2 helps us create a structured, static interpretation of the data
+- mapview allows for interactive exploration of individual counties
 
 
 ### Example 6: Mapping Bachelor's Degree Attainment Across California Census Tracts
 
-- Goal: Retrieve ACS 5-year educational attainment data, join it to California census tract boundaries, and visualize geographic variation in bachelor's degree attainment.
+- **Goal**: Retrieve ACS 5-year educational attainment data, join it to California census tract boundaries, and visualize geographic variation in bachelor's degree attainment.
 
 ```{r education-tract}
 ## Step 1: Data call to the Census API
@@ -343,14 +393,14 @@ edu_tract <- get_acs(
     show_call = TRUE)
 
 
-## Step 2: ShapeFile from tigris
+## Step 2: Shapefile from tigris
 
 tracts_sf_24 <- tracts(state = "CA", 
                        year = 2022, 
                        cb = TRUE)
 
 
-## Step 3: Join the data and ShapeFile
+## Step 3: Join the data and shapefile
 
 map_edu_acs5 <- tracts_sf_24 %>%
     left_join(edu_tract, by = "GEOID")
@@ -361,12 +411,15 @@ map_edu_acs5 <- tracts_sf_24 %>%
 ggplot(map_edu_acs5) +
     geom_sf(aes(fill = estimate), color = NA) +
     scale_fill_viridis_c(direction = -1,
-                         option = "plasma") +
+                         option = "plasma",
+                         labels = label_comma(accuracy = 1)) +
     labs(
         title = "Bachelor's Degree Attainment Across California Census Tracts",
         fill = "Estimate",
         caption = "Source: American Community Survey 5-year Estimates 2022")
+```
 
+```{r education-tract-mapview}
 # Try mapview for an interactive visualization
 
 mapview(map_edu_acs5 %>% 
@@ -375,8 +428,8 @@ mapview(map_edu_acs5 %>%
                      "STATE_NAME",
                      "estimate",
                      "moe")) %>%
-            rename('County and State' = NAME.y,
-                   County = NAMELSAD,
+            rename('Tract and State' = NAME.y,
+                   Tract = NAMELSAD,
                    State = STATE_NAME,
                    'Bachelors Degree Attainment Estimate' = estimate,
                    'Bachelors Degree Attainment Margin of Error' = moe), 
@@ -384,14 +437,14 @@ mapview(map_edu_acs5 %>%
         layer.name = "Bachelors Degree Attainment Estimate")
 ```
 
-- Workflow: ACS 5-Year Data → California Tract Shapefile → Join → Map
+- **Workflow**: ACS 5-Year Data → California Tract Shapefile → Join → Map
 
-- We now have ACS 5-year estimates for residents with a bachelor's degree at the census tract level throughout California.
+We now have ACS 5-year estimates for residents with a bachelor's degree at the census tract level throughout California. Census tracts provide a much finer geographic level of detail than counties, making them useful for neighborhood-scale analysis.
 
 
 ### Example 7: Mapping Median Household Income with Built-In Geometry
 
-- Goal: Retrieve ACS median household income estimates with geometry included and create a state-level choropleth map using ggplot2.
+- **Goal**: Retrieve ACS median household income estimates with geometry included and create a state-level choropleth map.
 
 ```{r income-state}
 ## Step 1: Data call to the Census API
@@ -403,28 +456,36 @@ income_state <- get_acs(
     survey = "acs1",
     geometry = TRUE,             # no need to get the shapefile, we have the geometry
     show_call = TRUE) %>%
-    shift_geometry()
+    shift_geometry() %>%
+    rename(Estimate = estimate)
 
 ## Step 2: Visualization, create a map
 
 ggplot(income_state) +
-    geom_sf(aes(fill = estimate)) +
+    geom_sf(aes(fill = Estimate)) +
     scale_fill_viridis_c(direction = -1, 
                          option = "cividis",
                          labels = scales::dollar) +
     labs(title = "United States Income by State", 
-         subtitle = "Geometry pulled directly",
          caption = "Source: American Community Survey 1-year Estimate 2024")
 ```
 
-- Workflow: ACS Data with Shifted Geometry → Map
+- **Workflow**: ACS Data with Shifted Geometry → Map
 
-- We now have ACS 1-year estimates of median household income along with state geometries in a single dataset. Because the geometry was retrieved directly from the Census API and shifted, no separate shapefile download or join is required.
+We now have ACS 1-year estimates of median household income along with state geometries in a single dataset. Because the geometry was retrieved directly from the Census API and shifted, no separate shapefile download or join is required. This example demonstrates the most streamlined mapping workflow in the course: retrieving statistical data and geometry together, then visualizing the results.
+
+So far, we have seen three common approaches:
+
+- Retrieve data and download a shapefile separately, then join.
+- Download a shapefile and apply transformations before joining.
+- Retrieve data and geometry together, eliminating the need for a separate join.
+
+Each approach has advantages depending on the data source and analysis requirements.
 
 
 ### Example 8: Calculating and Mapping Poverty Rates by County
 
-- Goal: Retrieve ACS poverty estimates, calculate county-level poverty rates using a numerator and denominator, apply a geometry shift, and visualize the results using both static and interactive maps.
+- **Goal**: Retrieve ACS poverty estimates, calculate county-level poverty rates using a numerator and denominator, apply a geometry shift, and visualize the results using both static and interactive maps.
 
 ```{r poverty-rate-county}
 ## Step 1: Data call to the Census API
@@ -450,7 +511,9 @@ ggplot(poverty_pct) +
                          labels = scales::label_percent(accuracy = 1)) +
     labs(title = "US County-Level Percent in Poverty",
          caption = "Source: American Community Survey 5-year Estimates 2024")
+```
 
+```{r poverty-rate-county-interactive}
 # Try mapview for an interactive visualization
 
 mapview(poverty_pct %>%
@@ -467,14 +530,14 @@ mapview(poverty_pct %>%
         layer.name = "Percent in Poverty")
 ```
 
-- Workflow: ACS Data with Geometry → Shift Geometry → Calculate Poverty Rate → Static Map (ggplot2) → Interactive Map (mapview)
+- **Workflow**: ACS Data with Geometry → Shift Geometry → Calculate Poverty Rate → Static Map (ggplot2) → Interactive Map (mapview)
 
-- This example demonstrates the importance of converting counts to rates and shows how finer geographic detail can reveal patterns that larger geographic units may mask.
+This example demonstrates the importance of converting counts to rates and shows how finer geographic detail can reveal patterns that larger geographic units may mask.
 
 
 ### Example 9: Comparing Educational Attainment with Side-by-Side Maps
 
-- Goal: Retrieve ACS educational attainment data with geometry included, create side-by-side maps comparing bachelor's and master's degree counts, and apply a log transformation to improve visual interpretation.
+- **Goal**: Retrieve ACS educational attainment data with geometry included, create side-by-side maps comparing bachelor's and master's degree counts, and apply a log transformation to improve visual interpretation.
 
 ```{r degree-tract}
 ## Step 1: Data call to the Census API
@@ -489,44 +552,52 @@ edu_ny_geo <- get_acs(
     year = 2023,
     survey = "acs5",
     geometry = TRUE,
-    show_call = TRUE)
+    show_call = TRUE) %>%
+    rename(Bachelors = bachelorsE,
+           Masters = mastersE)
 
 head(edu_ny_geo)  # view the wide output
+```
 
-
+```{r degree-tract-1}
 ## Step 2: Visualization, create a side by side map
 
 p1 = ggplot(edu_ny_geo) +
-    geom_sf(aes(fill = bachelorsE)) +
+    geom_sf(aes(fill = Bachelors)) +
     scale_fill_viridis_c(direction = -1,
-                         option = "plasma") +
+                         option = "plasma",
+                         labels = label_comma(accuracy = 1)) +
     labs(title = "Bachelor's Degrees")
 
 p2 = ggplot(edu_ny_geo) +
-    geom_sf(aes(fill = mastersE)) +
+    geom_sf(aes(fill = Masters)) +
     scale_fill_viridis_c(direction = -1,
-                         option = "plasma") +
+                         option = "plasma",
+                         labels = label_comma(accuracy = 1)) +
     labs(title = "Master's Degrees", 
          caption = "Source: American Community Survey 5-year Estimates 2023")
 
 (p1 | p2) + plot_annotation(
   title = "Educational Attainment Across New York Census Tracts")
+```
 
-
+```{r degree-tract-2}
 # Visualization with a log transformation, to bring the colors out
 
 p3 = ggplot(edu_ny_geo) +
-    geom_sf(aes(fill = bachelorsE)) +
+    geom_sf(aes(fill = Bachelors)) +
     scale_fill_viridis_c(trans = "log10", 
                          direction = -1,
-                         option = "plasma") +
+                         option = "plasma",
+                         labels = label_comma(accuracy = 1)) +
     labs(title = "Bachelor's Degrees (Log10)")
 
 p4 = ggplot(edu_ny_geo) +
-    geom_sf(aes(fill = mastersE)) +
+    geom_sf(aes(fill = Masters)) +
     scale_fill_viridis_c(trans = "log10", 
                          direction = -1,
-                         option = "plasma") +
+                         option = "plasma",
+                         labels = label_comma(accuracy = 1)) +
     labs(title = "Master's Degrees (Log10)", 
          caption = "Source: American Community Survey 5-year Estimates 2023")
 
@@ -534,14 +605,14 @@ p4 = ggplot(edu_ny_geo) +
   title = "Educational Attainment Across New York Census Tracts (Log10 Scale)")
 ```
 
-- Workflow: ACS Data with Geometry → Pivot Wide → Create Side-by-Side Maps → Apply Log Transformation → Compare Results
+- **Workflow**: ACS Data with Geometry → Pivot Wide → Create Side-by-Side Maps → Apply Log Transformation → Compare Results
 
-- We now have ACS educational attainment estimates and tract geometries for New York in a single spatial dataset. The log-transformed maps reveal patterns that were difficult to identify in the original visualizations because the color scale is no longer dominated by a small number of high-value tracts. Log transformation change how we visualize the data.
+We now have ACS educational attainment estimates and tract geometries for New York in a single spatial dataset. The log-transformed maps reveal patterns that were difficult to identify in the original visualizations because the color scale is no longer dominated by a small number of high value tracts. Log transformation compresses the range of values and allows more variation to become visible on the map.
 
 
 ### Example 10: Mapping Income and Landmarks in Washington, DC
 
-- Goal: Retrieve ACS median household income estimates with geometry included, add landmark locations from a supplemental shapefile, and create a layered map that combines socioeconomic data with geographic context.
+- **Goal**: Retrieve ACS median household income estimates with geometry included, add landmark locations from a supplemental shapefile, and create a layered map that combines socioeconomic data with geographic context.
 
 ```{r dc-landmarks}
 ## Step 1: Data call to the Census API
@@ -553,10 +624,11 @@ dc_income <- get_acs(
     survey = "acs5",
     year = 2024,
     geometry = TRUE,
-    show_call = TRUE)
+    show_call = TRUE) %>%
+    rename(Estimate = estimate)
 
 
-## Step 2: ShapeFile from tigris
+## Step 2: Shapefile from tigris
 
 dc_landmarks <- landmarks(state = "DC")
 
@@ -564,13 +636,16 @@ dc_landmarks <- landmarks(state = "DC")
 ## Step 3: Visualization, create a map with two layers
 
 ggplot() +
-    geom_sf(data = dc_income, aes(fill = estimate), alpha = 0.7) +
+    geom_sf(data = dc_income, aes(fill = Estimate), alpha = 0.7) +
+    scale_fill_continuous(labels = label_comma()) +
     geom_sf(data = dc_landmarks, color = "red", size = 1) +
     labs(title = "Median Household Income and Major Landmarks in Washington, DC",
          caption = "Source: American Community Survey 5-year Estimates 2024")
 ```
 
-- Workflow: ACS Data with Geometry → Landmark Shapefile → Overlay Layers → Map
+- **Workflow**: ACS Data with Geometry → Landmark Shapefile → Overlay Layers → Map
+
+The addition of landmark locations provides geographic context that helps connect income patterns to notable landmarks of the city.
 
 ### Demonstration Takeaway
 
