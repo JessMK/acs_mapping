@@ -1,4 +1,4 @@
-## ACS Mapping Demonstration
+# ACS Mapping Demonstration
 
 This repository contains demo materials, code examples, and resources from a public presentation on connecting to and mapping American Community Survey (ACS) data in R. The goal is to help R users access Census data, create informative maps, and build confidence working with spatial data.
 
@@ -62,7 +62,7 @@ These webinars provide additional examples, techniques, and best practices for w
 
 ---
 
-## Completely new to using R? Start here
+# Completely new to using R? Start here
 
 ## What You Need
 
@@ -149,9 +149,9 @@ https://desktop.github.com/
 3. Open the `.Rproj` file (if available)
 4. Open `00_setup.R`
 5. Uncomment lines 12 through 20 (remove the #) to install packages
-6. Uncomment line 54 (remove the #) and add your API Key in place of the text 
+6. Uncomment line 52 (remove the #) and add your API Key in place of the text 
 7. Run the full script to install required packages and save your API key
-8. After successfully getting output from line 75, put recomment (add a #) lines 12 through 20 & 54. You only need to do this step once.
+8. After successfully getting output from line 70, put re-comment (add a #) lines 12 through 20 & 52. You only need to do this step once.
 
 ---
 

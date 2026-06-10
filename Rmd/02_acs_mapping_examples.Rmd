@@ -62,13 +62,13 @@ head(apis[ , -c(8,9,10)], 30) #There are 1788 api options
 ACS_api <- apis %>%
     filter(grepl("ACS", name, ignore.case = TRUE))  # 273 ACS related API options
 
-cat("We now have 29 unique API end points to connect to, across several vintages:\n\n")
+cat("We now have 29 unique ACS related API end points to connect to, across several vintages:\n\n")
 
 table(ACS_api$name)
 
 cat("\n\n")
 
-cat("We have data available since 2004:\n\n")
+cat("We have ACS data available since 2004:\n\n")
 
 table(ACS_api$vintage) 
 ```
@@ -99,9 +99,9 @@ ACS5_22_vars <- load_variables(2022, "acs5")
 
 pop_acs <- get_acs(
     geography = "state",
-    variables = c("B01001_001E",    # Total Population by State
-                  "B01001_002E",    # Male Population by State
-                  "B01001_026E"),   # Female Population by State
+    variables = c("B01001_001E",    # Total Population (estimate)
+                  "B01001_002E",    # Male Population (estimate)
+                  "B01001_026E"),   # Female Population (estimate)
     year = 2024, 
     survey= "acs1",
     show_call = TRUE)                 # show the URL 
@@ -164,9 +164,9 @@ Many cartographic products shift Alaska and Hawaii closer to the continental Uni
 
 pop_acs_wide <- get_acs(
     geography = "state",
-    variables = c("B01001_001E",    # Total Population by State
-                  "B01001_002E",    # Male Population by State
-                  "B01001_026E"),   # Female Population by State
+    variables = c("B01001_001E",    # Total Population (estimate)
+                  "B01001_002E",    # Male Population (estimate)
+                  "B01001_026E"),   # Female Population (estimate)
     year = 2024, 
     survey= "acs1",
     output = "wide",
@@ -224,7 +224,7 @@ Users can click on any state to view total, male, and female population estimate
 
 pop_acs_geo <- get_acs(
     geography = "state",
-    variables = "B01001_001",
+    variables = "B01001_001",   # Total Population (estimate)
     geometry = TRUE,   # bring the geometry in during the data call, tidycensus makes this possible
     year = 2024,      
     survey= "acs1",
@@ -261,7 +261,7 @@ Alaska and Hawaii are geographically far from the continental United States. Whi
 
 pop_dec <- get_decennial(
     geography = "county",
-    variables = "P1_001N",
+    variables = "P1_001N",    # Total Population (count)
     year = 2020,
     show_call = TRUE) %>%
     rename(Count = value)
@@ -307,7 +307,7 @@ Notice that the workflow is nearly identical to the ACS examples. Once the data 
 
 poverty_county <- get_acs(
     geography = "county",
-    variables = "B17001_002",
+    variables = "B17001_002",   # Income in the past 12 months below poverty level (estimate)
     state = c("MD", "VA", "PA", "DC", "DE", "WV"),
     year = 2023,
     survey = "acs5",
@@ -377,7 +377,7 @@ This example demonstrates how ACS 5-year estimates can be used for sub-state ana
 
 edu_tract <- get_acs(
     geography = "tract",
-    variables = "B15003_022", # bachelor's degree
+    variables = "B15003_022",   # Total bachelor's degree for 25yr+ (estimate)
     state = "CA",
     year = 2022,
     survey = "acs5",
@@ -442,7 +442,7 @@ We now have ACS 5-year estimates for residents with a bachelor's degree at the c
 
 income_state <- get_acs(
     geography = "state",
-    variables = "B19013_001",
+    variables = "B19013_001",    # Median household income in the past 12 months (in 2024 inflation-adjusted dollars)(estimate)
     year = 2024,
     survey = "acs1",
     geometry = TRUE,             # no need to get the shapefile, we have the geometry
@@ -483,8 +483,8 @@ Each approach has advantages depending on the data source and analysis requireme
 
 poverty_pct <- get_acs(
     geography = "county",
-    variables = "B17001_002",     # estimate, Total:!!Income in the past 12 months below poverty level
-    summary_var = "B17001_001",   # estimate denominator, Poverty Status in the Past 12 Months by Sex by Age
+    variables = "B17001_002",     # Income in the past 12 months below poverty level (estimate)
+    summary_var = "B17001_001",   # Poverty Status in the Past 12 Months (estimate denominator)
     year = 2024,
     survey = "acs5",
     geometry = TRUE) %>%
@@ -537,8 +537,8 @@ edu_ny_geo <- get_acs(
     geography = "tract",
     state = "NY",
     variables = c(
-        bachelors = "B15003_022",
-        masters = "B15003_023"),
+        bachelors = "B15003_022",    # Total bachelor's degree for 25yr+ (estimate)
+        masters = "B15003_023"),    # Total master's degree for 25yr+ (estimate)
     output = "wide",
     year = 2023,
     survey = "acs5",
@@ -611,7 +611,7 @@ We now have ACS educational attainment estimates and tract geometries for New Yo
 dc_income <- get_acs(
     geography = "tract",
     state = "DC",
-    variables = "B19013_001",
+    variables = "B19013_001",   # Median household income in the past 12 months (in 2024 inflation-adjusted dollars)(estimate)
     survey = "acs5",
     year = 2024,
     geometry = TRUE,

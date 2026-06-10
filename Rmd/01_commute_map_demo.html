@@ -740,9 +740,40 @@ dc_counties &lt;- county_map %&gt;%
                           &quot;51&quot;, # Virginia
                           &quot;10&quot;, # Delaware
                           &quot;54&quot;, # West Virginia
-                          &quot;42&quot;)) # Pennsylvania    
+                          &quot;42&quot;)) # Pennsylvania
 
-dc_map &lt;- ggplot(dc_counties) +
+cat(&quot;We now have all counties in select states:\n\n&quot;)</code></pre>
+<pre><code>## We now have all counties in select states:</code></pre>
+<pre class="r"><code>head(dc_counties %&gt;% 
+  select(STATE_NAME, NAMELSAD, commute_index, geometry), 10)</code></pre>
+<pre><code>## Simple feature collection with 10 features and 3 fields
+## Geometry type: MULTIPOLYGON
+## Dimension:     XY
+## Bounding box:  xmin: 1607677 ymin: 197916.4 xmax: 1796564 ymax: 579415.1
+## Projected CRS: USA_Contiguous_Albers_Equal_Area_Conic
+##      STATE_NAME              NAMELSAD commute_index
+## 1      Delaware         Sussex County      17.39907
+## 2      Delaware     New Castle County      14.34201
+## 3      Maryland      Baltimore County      18.44006
+## 4      Maryland     Dorchester County      17.84331
+## 5      Maryland        Charles County      37.92518
+## 6      Maryland          Cecil County      20.72040
+## 7  Pennsylvania      Lancaster County      13.38515
+## 8  Pennsylvania    Northampton County      16.58814
+## 9      Virginia Northumberland County      23.07992
+## 10     Virginia   Westmoreland County      36.69088
+##                          geometry
+## 1  MULTIPOLYGON (((1730706 334...
+## 2  MULTIPOLYGON (((1727469 411...
+## 3  MULTIPOLYGON (((1668826 376...
+## 4  MULTIPOLYGON (((1718217 251...
+## 5  MULTIPOLYGON (((1607677 269...
+## 6  MULTIPOLYGON (((1667127 422...
+## 7  MULTIPOLYGON (((1617511 458...
+## 8  MULTIPOLYGON (((1693625 550...
+## 9  MULTIPOLYGON (((1673513 223...
+## 10 MULTIPOLYGON (((1632445 237...</code></pre>
+<pre class="r"><code>dc_map &lt;- ggplot(dc_counties) +
     geom_sf(aes(fill = commute_index),
             color = &quot;white&quot;,
             linewidth = 0.2) +
@@ -832,7 +863,28 @@ states_sf &lt;- states(cb = TRUE,
 commute_map &lt;- states_sf %&gt;% 
     left_join(commute_weighted, by = &quot;GEOID&quot;)
 
-# Create the state level commute map using the estmated mean commute time calculation 
+cat(&quot;\n\n&quot;)</code></pre>
+<pre class="r"><code>cat(&quot;We now have data and geography linked:\n\n&quot;)</code></pre>
+<pre><code>## We now have data and geography linked:</code></pre>
+<pre class="r"><code>head(commute_map %&gt;% 
+  select(NAME.x, avg_commute, geometry), 10)</code></pre>
+<pre><code>## Simple feature collection with 10 features and 2 fields
+## Geometry type: MULTIPOLYGON
+## Dimension:     XY
+## Bounding box:  xmin: -2356114 ymin: -782290.7 xmax: 1781848 ymax: 970427.9
+## Projected CRS: USA_Contiguous_Albers_Equal_Area_Conic
+##          NAME.x avg_commute                       geometry
+## 1    New Mexico    25.00946 MULTIPOLYGON (((-1231344 -5...
+## 2  South Dakota    19.05659 MULTIPOLYGON (((-633765.6 8...
+## 3    California    30.75098 MULTIPOLYGON (((-2066923 -2...
+## 4      Kentucky    25.52380 MULTIPOLYGON (((584560 -886...
+## 5       Alabama    27.34241 MULTIPOLYGON (((760323.7 -7...
+## 6       Georgia    30.42037 MULTIPOLYGON (((1390722 -58...
+## 7      Arkansas    24.10384 MULTIPOLYGON (((122656.3 -1...
+## 8  Pennsylvania    28.13409 MULTIPOLYGON (((1287712 486...
+## 9      Missouri    25.16283 MULTIPOLYGON (((19008.51 34...
+## 10     Colorado    27.04786 MULTIPOLYGON (((-1123223 20...</code></pre>
+<pre class="r"><code># Create the state level commute map using the estimated mean commute time calculation 
 
 state_map &lt;- ggplot(commute_map) +
     geom_sf(aes(fill = avg_commute),

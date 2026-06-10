@@ -335,7 +335,12 @@ dc_counties <- county_map %>%
                           "51", # Virginia
                           "10", # Delaware
                           "54", # West Virginia
-                          "42")) # Pennsylvania    
+                          "42")) # Pennsylvania
+
+cat("We now have all counties in select states:\n\n")
+
+head(dc_counties %>% 
+  select(STATE_NAME, NAMELSAD, commute_index, geometry), 10)
 
 dc_map <- ggplot(dc_counties) +
     geom_sf(aes(fill = commute_index),
@@ -426,7 +431,14 @@ states_sf <- states(cb = TRUE,
 commute_map <- states_sf %>% 
     left_join(commute_weighted, by = "GEOID")
 
-# Create the state level commute map using the estmated mean commute time calculation 
+cat("\n\n")
+
+cat("We now have data and geography linked:\n\n")
+
+head(commute_map %>% 
+  select(NAME.x, avg_commute, geometry), 10)
+
+# Create the state level commute map using the estimated mean commute time calculation 
 
 state_map <- ggplot(commute_map) +
     geom_sf(aes(fill = avg_commute),
