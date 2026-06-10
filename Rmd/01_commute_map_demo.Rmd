@@ -88,7 +88,7 @@ commute_acs <- get_acs(
     variables = acs_vars,
     year = 2024,
     survey = "acs5",      # acs5 is the default
-    output = "wide",      # Wide format will allow for ease of visualization
+    output = "wide",
     show_call = TRUE) %>%
     mutate(
         # COMMUTE INTENSITY INDEX: Approximate weighted commute burden score, 

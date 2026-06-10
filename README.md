@@ -46,6 +46,16 @@ You can request a [Census API key here](https://api.census.gov/data/key_signup.h
 
 ---
 
+## Additional Resources
+
+If you'd like to explore more advanced Census data analysis and mapping workflows in R, I highly recommend the SSDAN webinar series presented by Kyle Walker:
+
+- [The 2025 SSDAN Webinar Series: Analyzing 2020 Census, 2023 ACS Data, and Mapping with R](https://ssdan.net/events/the-2025-ssdan-webinar-series-2023-acs-data-with-r-mapping-tools-and-the-2020-census/)
+
+These webinars provide additional examples, techniques, and best practices for working with Census data in R.
+
+---
+
 ## Now, try it yourself with the scripts in the examples folder
 
 ![Weighted Average Commute Time by State](mapping_visualizations/state_commute_map.png)
